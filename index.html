@@ -1,0 +1,957 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F2F4F6">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="출퇴근">
+<title>출퇴근 기록</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⏱️</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F2F4F6; --surface:#FFFFFF; --surface2:#F2F4F6; --ink:#191F28; --sub:#4E5968; --muted:#8B95A1; --line:#E5E8EB;
+  --in:#3182F6; --in-press:#1B64DA; --out:#333D4B; --warn:#E07B00; --warn-bg:#FFF3E0; --danger:#F04452; --danger-bg:#FFEEEE;
+  --ok-bg:#E8F3FF; --chip:#F2F4F6; --btn2:#E8F3FF; --btn2-ink:#1B64DA; --scrim:rgba(0,0,0,.45);
+  color-scheme:light;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#101013; --surface:#1D1D22; --surface2:#2C2C35; --ink:#FFFFFF; --sub:#C3C3C6; --muted:#7E7E87; --line:#2C2C35;
+    --in:#3182F6; --in-press:#1B64DA; --out:#4E5968; --warn:#FFB331; --warn-bg:rgba(254,152,0,.16); --danger:#FF6B77; --danger-bg:rgba(240,68,82,.18);
+    --ok-bg:rgba(49,130,246,.2); --chip:#2C2C35; --btn2:rgba(49,130,246,.2); --btn2-ink:#8CBBFF; --scrim:rgba(0,0,0,.6); color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#101013; --surface:#1D1D22; --surface2:#2C2C35; --ink:#FFFFFF; --sub:#C3C3C6; --muted:#7E7E87; --line:#2C2C35;
+  --in:#3182F6; --in-press:#1B64DA; --out:#4E5968; --warn:#FFB331; --warn-bg:rgba(254,152,0,.16); --danger:#FF6B77; --danger-bg:rgba(240,68,82,.18);
+  --ok-bg:rgba(49,130,246,.2); --chip:#2C2C35; --btn2:rgba(49,130,246,.2); --btn2-ink:#8CBBFF; --scrim:rgba(0,0,0,.6); color-scheme:dark;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Pretendard",-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",sans-serif;font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased;word-break:keep-all;letter-spacing:-.01em}
+button,input,select,textarea{font:inherit;color:inherit;letter-spacing:inherit}
+button{cursor:pointer;-webkit-tap-highlight-color:transparent}
+:focus-visible{outline:2px solid var(--in);outline-offset:2px}
+.num{font-variant-numeric:tabular-nums}
+.app{max-width:560px;margin:0 auto;padding:0 16px 110px}
+.app.has-cta{padding-bottom:200px}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+
+/* demo bar */
+.demo{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:10px 0 0;padding:8px 12px;border-radius:14px;background:var(--surface);font-size:13px;color:var(--muted)}
+.demo select{flex:1;min-width:140px;padding:6px 10px;border:0;border-radius:10px;background:var(--surface2);font-weight:600;color:var(--sub)}
+.demo button{border:0;background:none;color:var(--muted);padding:6px 4px;font-weight:600}
+.demo button.armed{color:var(--danger)}
+
+/* top */
+.linkbtn{border:0;background:none;color:var(--muted);font-size:13px;font-weight:600;padding:4px 0 4px 8px;text-decoration:underline}
+.top{display:flex;justify-content:space-between;align-items:center;padding:20px 4px 6px}
+.top b{font-size:20px;font-weight:700;letter-spacing:-.02em}
+.top span{font-size:15px;color:var(--muted);font-weight:500}
+
+/* home */
+.home{text-align:center}
+.home .banner{text-align:left}
+.home .today{margin:8px 4px 20px;font-size:15px;color:var(--muted);font-weight:500}
+.home .chip{margin:0;font-size:15px;padding:6px 14px;border-radius:99px;font-weight:700;color:#fff}
+.home .chip.st-on{background:var(--in)}
+.home .chip.st-done{background:#03B26C}
+.home .chip.st-before{background:var(--muted)}
+.home .big{margin:10px 4px 4px;font-size:28px;font-weight:700;line-height:1.35;letter-spacing:-.03em}
+.home .sub2{margin:0 4px 8px;font-size:16px;color:var(--sub)}
+.home{padding-top:48px}
+.hello{margin:4px 4px 16px;font-size:24px;font-weight:700;line-height:1.4;letter-spacing:-.03em}
+.hero{background:var(--surface);border-radius:24px;padding:26px 24px 24px}
+.hero .k{font-size:15px;color:var(--sub);font-weight:500}
+.hero .v{font-size:40px;font-weight:700;letter-spacing:-.04em;line-height:1.25;margin-top:4px}
+.hero .st{display:flex;align-items:center;gap:8px;margin-top:18px;padding-top:18px;border-top:1px solid var(--line);font-size:15px;color:var(--sub)}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--muted);flex:none}
+.dot.on{background:var(--in);box-shadow:0 0 0 4px var(--ok-bg)}
+.cta{position:fixed;left:0;right:0;bottom:calc(62px + env(safe-area-inset-bottom,0px));padding:20px 16px 12px;background:linear-gradient(to bottom,transparent,var(--bg) 40%);z-index:15}
+.cta-in{max-width:528px;margin:0 auto}
+.punch{display:block;width:100%;border:0;border-radius:16px;padding:18px 20px;font-size:18px;font-weight:700;color:#fff;background:var(--in);transition:transform .1s ease,background .15s}
+.punch:active{transform:scale(.98);background:var(--in-press)}
+.punch.out{background:var(--out)}
+
+.banner{display:flex;gap:12px;align-items:center;justify-content:space-between;padding:14px 16px;border-radius:16px;background:var(--warn-bg);color:var(--warn);margin:12px 0 0;font-size:14px;font-weight:500}
+.banner.danger{background:var(--danger-bg);color:var(--danger)}
+.banner button{flex:none;border:0;background:var(--surface);color:inherit;border-radius:10px;padding:7px 12px;font-size:13px;font-weight:700}
+
+/* sections & lists */
+h2.sec{font-size:17px;font-weight:700;color:var(--ink);margin:28px 4px 10px;display:flex;justify-content:space-between;align-items:baseline;gap:8px;letter-spacing:-.02em}
+h2.sec .r{font-weight:500;font-size:13px;color:var(--muted)}
+.group{background:var(--surface);border-radius:20px;overflow:hidden;padding:6px 0}
+.row{display:flex;gap:12px;align-items:center;width:100%;padding:14px 20px;border:0;background:none;text-align:left}
+button.row:active{background:var(--surface2)}
+.row .main{flex:1;min-width:0}
+.row .t{font-weight:600;font-size:16px}
+.row .s{font-size:14px;color:var(--muted);margin-top:1px}
+.row .end{text-align:right;flex:none;font-weight:600}
+.chips{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px}
+.chip{display:inline-block;font-size:12px;line-height:1.5;padding:2px 8px;border-radius:6px;background:var(--chip);color:var(--sub);font-weight:600}
+.chip.warn{background:var(--warn-bg);color:var(--warn)}
+.chip.danger{background:var(--danger-bg);color:var(--danger)}
+.chip.ok,.chip.blue{background:var(--ok-bg);color:var(--in)}
+.empty{padding:28px 20px;color:var(--muted);font-size:15px;text-align:center}
+
+.monthnav{display:flex;align-items:center;justify-content:flex-start;gap:4px;margin:16px 0 4px 4px}
+.monthnav b{font-size:22px;font-weight:700;letter-spacing:-.03em;order:0;margin-right:auto}
+.monthnav button{order:1;width:36px;height:36px;border-radius:10px;border:0;background:var(--surface);font-size:18px;color:var(--sub)}
+.monthnav button:disabled{opacity:.35;cursor:default}
+
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.filters select{padding:9px 12px;border:0;border-radius:12px;background:var(--surface);font-weight:600;color:var(--sub)}
+.toggle{display:inline-flex;align-items:center;gap:6px;padding:9px 14px;border:0;border-radius:12px;background:var(--surface);font-size:14px;font-weight:600;color:var(--sub)}
+.toggle[aria-pressed="true"]{background:var(--btn2);color:var(--btn2-ink)}
+
+/* calendar */
+.cal{background:var(--surface);border-radius:20px;padding:12px 8px 14px;margin-top:12px}
+.cal-h,.cal-g{display:grid;grid-template-columns:repeat(7,1fr)}
+.cal-h span{text-align:center;font-size:13px;color:var(--muted);font-weight:600;padding:4px 0 6px}
+.cal-h .sun,.cal-c.sun .cal-n{color:var(--danger)}
+.cal-h .sat,.cal-c.sat .cal-n{color:var(--in)}
+.cal-c{border:0;background:none;display:flex;flex-direction:column;align-items:center;gap:1px;padding:3px 0 5px;border-radius:12px;position:relative;min-width:0}
+.cal-c:disabled{opacity:.35;cursor:default}
+.cal-n{width:32px;height:32px;display:grid;place-items:center;border-radius:50%;font-size:15px;font-weight:600;font-variant-numeric:tabular-nums}
+.cal-c.today .cal-n{box-shadow:inset 0 0 0 1.5px var(--in)}
+.cal-c.sel .cal-n,.cal-c.sel.sun .cal-n,.cal-c.sel.sat .cal-n{background:var(--in);color:#fff;box-shadow:none}
+.cal-m{font-size:11px;font-weight:600;color:var(--sub);font-variant-numeric:tabular-nums;white-space:nowrap;line-height:1.4}
+.cal-m.on{color:var(--in)}
+.cal-m.bad{color:var(--danger)}
+.cal-m.off{color:var(--muted);font-weight:500}
+.cal-e{position:absolute;top:3px;right:calc(50% - 20px);width:6px;height:6px;border-radius:50%;background:var(--warn)}
+.cal-legend{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;font-size:12px;color:var(--muted);padding:10px 8px 0;margin-top:6px;border-top:1px solid var(--line)}
+
+/* pay */
+.total{background:var(--surface);border-radius:20px;padding:22px 20px;margin-top:12px}
+.total .k{font-size:15px;color:var(--sub);font-weight:500}
+.total .v{font-size:32px;font-weight:700;letter-spacing:-.04em;line-height:1.3;margin:2px 0 8px}
+.kv{display:flex;justify-content:space-between;gap:12px;padding:12px 20px}
+.kv .k{color:var(--sub)}
+.kv .k small{display:block;font-size:13px;color:var(--muted)}
+.kv>div:last-child{font-weight:600}
+.kv.sum{margin-top:4px;border-top:1px solid var(--line);padding-top:16px;font-weight:700}
+.kv.sum .k,.kv.sum>div:first-child{color:var(--ink)}
+.note{font-size:13px;color:var(--muted);margin:10px 4px 0;line-height:1.6}
+
+.btns{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+.btn{border:0;background:var(--btn2);color:var(--btn2-ink);border-radius:14px;padding:14px 18px;font-weight:700;font-size:15px}
+.btn.primary,.btn.green{background:var(--in);color:#fff}
+.btn.block{width:100%;padding:16px}
+.btn:active{filter:brightness(.95)}
+
+/* forms */
+.field{display:block;margin-top:16px}
+.field>span{display:block;font-size:14px;font-weight:600;color:var(--sub);margin-bottom:6px}
+.field input,.field select,.field textarea{width:100%;padding:14px;border:0;border-radius:14px;background:var(--surface2);font-size:16px;font-weight:500}
+.field input:focus,.field select:focus,.field textarea:focus{outline:2px solid var(--in);outline-offset:0}
+.field textarea{min-height:84px;resize:vertical}
+.field .hint{font-size:13px;color:var(--muted);margin-top:6px}
+.field .hint.warn{color:var(--danger)}
+.wagebox{display:flex;align-items:center;gap:8px;background:var(--surface2);border-radius:14px;padding-right:16px}
+.wagebox input{font-size:22px!important;font-weight:700!important;background:none!important}
+.wagebox b{font-size:18px;color:var(--sub)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.days{display:flex;gap:6px}
+.days button{flex:1;padding:11px 0;border-radius:12px;border:0;background:var(--surface2);font-weight:700;color:var(--sub)}
+.days button[aria-pressed="true"]{background:var(--in);color:#fff}
+.switch{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 20px}
+.switch select{padding:8px 10px;border:0;border-radius:10px;background:var(--surface2);font-weight:600}
+.sw{width:50px;height:30px;border-radius:99px;border:0;background:var(--line);position:relative;flex:none;transition:background .15s}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2);transition:left .15s}
+.sw[aria-checked="true"]{background:var(--in)}
+.sw[aria-checked="true"]::after{left:23px}
+.linkbox{display:flex;gap:8px;margin-top:10px}
+.linkbox input{flex:1;min-width:0;padding:12px;border:0;border-radius:12px;background:var(--surface2);font-size:14px}
+
+/* history */
+.hist{margin-top:4px;background:var(--surface2);border-radius:16px;padding:14px 16px}
+.hist p{margin:0 0 12px;font-size:14px;font-weight:600}
+.hist p:last-child{margin-bottom:0}
+.hist p span{display:block;font-size:13px;color:var(--muted);font-weight:400;margin-top:2px}
+
+/* tabs */
+.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px);z-index:20}
+.tabs-in{max-width:560px;margin:0 auto;display:flex}
+.tabs button{flex:1;border:0;background:none;padding:8px 4px 8px;font-size:11px;color:var(--muted);font-weight:600;display:flex;flex-direction:column;align-items:center;gap:3px}
+.tabs button svg{width:24px;height:24px}
+.tabs button.on{color:var(--ink)}
+
+/* sheet */
+.scrim{position:fixed;inset:0;background:var(--scrim);display:flex;align-items:flex-end;justify-content:center;z-index:40}
+.sheet{background:var(--surface);width:100%;max-width:560px;border-radius:24px 24px 0 0;padding:10px 22px calc(24px + env(safe-area-inset-bottom,0px));max-height:90%;overflow:auto}
+.sheet .handle{width:40px;height:4px;border-radius:4px;background:var(--line);margin:0 auto 16px}
+.sheet h3{margin:0;font-size:22px;font-weight:700;letter-spacing:-.03em}
+.sheet .sub{margin:4px 0 0;color:var(--muted);font-size:15px}
+.sheet .close{float:right;border:0;background:none;width:32px;height:32px;font-size:18px;color:var(--muted)}
+.sheet h2.sec{margin-top:22px}
+
+#toast{position:fixed;left:50%;bottom:calc(150px + env(safe-area-inset-bottom,0px));transform:translate(-50%,10px);background:rgba(25,31,40,.92);color:#fff;padding:12px 18px;border-radius:14px;font-size:15px;font-weight:600;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:60;max-width:90%;text-align:center}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+
+/* join */
+.join{padding-top:36px}
+.join h1{font-size:26px;line-height:1.4;letter-spacing:-.03em;margin:0 0 8px}
+
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="toast" role="status" aria-live="polite"></div>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc, updateDoc, addDoc, collection, query, where, onSnapshot, serverTimestamp, Timestamp, writeBatch, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
+
+/* ---------- Firebase 연결 정보 ---------- */
+const firebaseConfig = {
+  apiKey: "AIzaSyAcv6uyTuTAz4sWaJ_4_4ecSDXHeDbZFMU",
+  authDomain: "tmt-attendance-2026.firebaseapp.com",
+  projectId: "tmt-attendance-2026",
+  storageBucket: "tmt-attendance-2026.firebasestorage.app",
+  messagingSenderId: "52007581658",
+  appId: "1:52007581658:web:9c06bed53bacff8589f2e3"
+};
+const fbApp = initializeApp(firebaseConfig);
+const auth = getAuth(fbApp);
+const db = getFirestore(fbApp);
+const idEmail = id => `${id}@${firebaseConfig.authDomain}`;
+
+const MIN_WAGE = 10320; // 2026년 최저시급
+const WD = ['일','월','화','수','목','금','토'];
+const DAY = 86400000;
+
+/* ---------- helpers ---------- */
+const pad = n => String(n).padStart(2,'0');
+const ymd = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const ymOf = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}`;
+const parseYmd = s => { const [a,b,c] = s.split('-').map(Number); return new Date(a,b-1,c); };
+const addDays = (d,n) => { const x = new Date(d); x.setDate(x.getDate()+n); return x; };
+const sod = d => { const x = new Date(d); x.setHours(0,0,0,0); return x; };
+const weekStart = d => { const x = sod(d); return addDays(x, -((x.getDay()+6)%7)); };
+const hm = ts => { const d = new Date(ts); return `${pad(d.getHours())}:${pad(d.getMinutes())}`; };
+const dur = min => { min = Math.max(0, Math.round(min)); const h = Math.floor(min/60), m = min%60; return h && m ? `${h}시간 ${m}분` : h ? `${h}시간` : `${m}분`; };
+const won = n => Math.round(n).toLocaleString('ko-KR') + '원';
+const dLabel = s => { const d = parseYmd(s); return `${d.getMonth()+1}월 ${d.getDate()}일 (${WD[d.getDay()]})`; };
+const mdLabel = d => `${d.getMonth()+1}월 ${d.getDate()}일`;
+const ymLabel = ym => { const [y,m] = ym.split('-'); return `${y}년 ${+m}월`; };
+const shiftYm = (ym,n) => { const [y,m] = ym.split('-').map(Number); return ymOf(new Date(y, m-1+n, 1)); };
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid = () => Math.random().toString(36).slice(2,10);
+const daysAgo = s => Math.round((sod(new Date()) - parseYmd(s)) / DAY);
+const $ = s => document.querySelector(s);
+const autoBreak = gross => gross >= 510 ? 60 : gross >= 240 ? 30 : 0;
+
+/* ---------- 상태 ---------- */
+const S = { company:null, employees:[], records:[], loaded:false };
+let me = null;            // {uid, role:'admin'|'emp', empId}
+let phase = 'loading';    // loading | setup | login | join | noaccess | app
+let joinToken = new URLSearchParams(location.search).get('join');
+let joinInfo = null;
+let ui = { tab:'home', month: ymOf(new Date()), sheet:null, filterEmp:'all', onlyEdited:false, expanded:null, selDate:null, relinkArm:null };
+let busy = false, suppressRoute = false;
+
+const empById = id => S.employees.find(e => e.id === id);
+const recsOf = id => S.records.filter(r => r.empId === id && r.in);
+const isClosed = ym => !!(S.company && (S.company.closed || []).includes(ym));
+const current = id => recsOf(id).filter(r => !r.out && Date.now() - r.in < 16*3600000).sort((a,b) => b.in - a.in)[0];
+const stale = id => recsOf(id).filter(r => !r.out && Date.now() - r.in >= 16*3600000).sort((a,b) => b.in - a.in);
+const empCanEdit = date => daysAgo(date) >= 0 && daysAgo(date) <= 7 && !isClosed(date.slice(0,7));
+const joinLink = t => `${location.origin}${location.pathname}?join=${t}`;
+const randToken = () => Array.from(crypto.getRandomValues(new Uint8Array(12)), b => b.toString(36).padStart(2,'0')).join('').slice(0,20);
+const tsMs = v => v && typeof v.toMillis === 'function' ? v.toMillis() : (typeof v === 'number' ? v : null);
+function mapRec(d){ const x = d.data({serverTimestamps:'estimate'}); return {id:d.id, empId:x.empId, date:x.date, month:x.month, in:tsMs(x.in), out:tsMs(x.out), breakMin:x.breakMin ?? null, edits:x.edits || []}; }
+function mapEmp(d){ const x = d.data(); return {id:d.id, name:x.name, wage:x.wage, start:x.start, joined:!!x.joined, uid:x.uid || null, loginId:x.loginId || null, inviteToken:x.inviteToken || null, inviteExpires:tsMs(x.inviteExpires)}; }
+
+/* ---------- 계산 ---------- */
+/* ---------- 계산 ---------- */
+function computeMonth(emp, ym){
+  const recs = recsOf(emp.id).sort((a,b) => a.in - b.in);
+  const [y,m] = ym.split('-').map(Number);
+  const first = new Date(y, m-1, 1), last = new Date(y, m, 0);
+  const today = sod(new Date());
+  const res = {workMin:0, otMin:0, nightMin:0, h50:0, h100:0, missing:0, recStats:{}, weeks:[]};
+  for (let ws = weekStart(first); ws <= last; ws = addDays(ws,7)){
+    const we = addDays(ws,7);
+    const wrecs = recs.filter(r => { const d = parseYmd(r.date); return d >= ws && d < we; });
+    let weekReg = 0; const dayCum = {};
+    for (const r of wrecs){
+      const inMonth = r.date.slice(0,7) === ym;
+      if (!r.out){ if (inMonth) res.missing++; continue; }
+      const gross = Math.max(0, Math.round((r.out - r.in)/60000));
+      const brk = r.breakMin != null ? r.breakMin : autoBreak(gross);
+      const bStart = Math.floor((gross - brk)/2);
+      const isHol = parseYmd(r.date).getDay() === 0; // 일요일 = 주휴일
+      let w=0, ot=0, n=0, h50=0, h100=0, hc=0;
+      for (let i = 0; i < gross; i++){
+        if (i >= bStart && i < bStart + brk) continue;
+        w++;
+        const hr = new Date(r.in + i*60000).getHours();
+        if (hr >= 22 || hr < 6) n++;
+        if (isHol){ hc++; if (hc <= 480) h50++; else h100++; continue; }
+        dayCum[r.date] = (dayCum[r.date] || 0) + 1;
+        if (dayCum[r.date] > 480 || weekReg >= 2400) ot++; else weekReg++;
+      }
+      res.recStats[r.id] = {work:w, ot, night:n, hol:h50+h100, brk};
+      if (inMonth){ res.workMin += w; res.otMin += ot; res.nightMin += n; res.h50 += h50; res.h100 += h100; }
+    }
+    // 주휴수당: 그 주 일요일이 속한 달에 포함
+    const sun = addDays(ws,6), empStart = parseYmd(emp.start);
+    if (sun.getMonth() === m-1 && sun >= empStart && ws <= today){
+      const pending = sun >= today;
+      let wk = 0; for (const r of wrecs) if (res.recStats[r.id]) wk += res.recStats[r.id].work;
+      let status, amount = 0;
+      if (wk < 900) status = pending ? `진행 중, 지금까지 ${dur(wk)}` : `${dur(wk)} 근무, 15시간 미만이라 해당 없음`;
+      else { amount = Math.round(Math.min(wk/60,40)/40*8*emp.wage); status = pending ? `진행 중, 지금까지 ${dur(wk)}` : `${dur(wk)} 근무`; }
+      res.weeks.push({ws, sun, status, amount, pending, ok: amount > 0});
+    }
+  }
+  const w = emp.wage;
+  res.pay = {
+    base: Math.round(res.workMin/60*w),
+    juhyu: res.weeks.reduce((a,x) => a + x.amount, 0),
+  };
+  res.pay.total = res.pay.base + res.pay.juhyu;
+  res.holMin = res.h50 + res.h100;
+  return res;
+}
+const statOf = (emp, r) => computeMonth(emp, r.date.slice(0,7)).recStats[r.id];
+
+/* ---------- 공통 조각 ---------- */
+const ICONS = {"home": "<path d=\"M12 6v6l4 2\" stroke=\"currentColor\" stroke-width=\"2\" fill=\"none\" stroke-linecap=\"round\"/><circle cx=\"12\" cy=\"12\" r=\"9\" stroke=\"currentColor\" stroke-width=\"2\" fill=\"none\"/>", "today": "<path d=\"M12 6v6l4 2\" stroke=\"currentColor\" stroke-width=\"2\" fill=\"none\" stroke-linecap=\"round\"/><circle cx=\"12\" cy=\"12\" r=\"9\" stroke=\"currentColor\" stroke-width=\"2\" fill=\"none\"/>", "records": "<rect x=\"4\" y=\"5\" width=\"16\" height=\"15\" rx=\"3\" stroke=\"currentColor\" stroke-width=\"2\" fill=\"none\"/><path d=\"M4 10h16M9 3v4M15 3v4\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\"/>", "pay": "<rect x=\"3\" y=\"6\" width=\"18\" height=\"13\" rx=\"3\" stroke=\"currentColor\" stroke-width=\"2\" fill=\"none\"/><path d=\"M3 11h18\" stroke=\"currentColor\" stroke-width=\"2\"/><path d=\"M7 15h4\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\"/>", "staff": "<circle cx=\"9\" cy=\"9\" r=\"3.5\" stroke=\"currentColor\" stroke-width=\"2\" fill=\"none\"/><path d=\"M3 19c.8-3 3.2-4.5 6-4.5s5.2 1.5 6 4.5\" stroke=\"currentColor\" stroke-width=\"2\" fill=\"none\" stroke-linecap=\"round\"/><path d=\"M16 5.5a3.5 3.5 0 0 1 0 7M18 14.8c1.4.6 2.4 2 2.9 4.2\" stroke=\"currentColor\" stroke-width=\"2\" fill=\"none\" stroke-linecap=\"round\"/>"};
+const topbar = (a,b) => `<header class="top"><b>${esc(a)}</b><span>${esc(b)}<button class="linkbtn" data-action="logout">로그아웃</button></span></header>`;
+function tabs(items){
+  return `<nav class="tabs" aria-label="메뉴"><div class="tabs-in">${items.map(([k,l]) =>
+    `<button data-action="tab" data-k="${k}" class="${ui.tab===k?'on':''}" ${ui.tab===k?'aria-current="page"':''}><svg viewBox="0 0 24 24" aria-hidden="true">${ICONS[k]}</svg>${l}</button>`).join('')}</div></nav>`;
+}
+function monthNav(){
+  const next = shiftYm(ui.month,1) > ymOf(new Date());
+  return `<div class="monthnav"><button data-action="month" data-d="-1" aria-label="이전 달">‹</button>
+    <b>${ymLabel(ui.month)}</b><button data-action="month" data-d="1" aria-label="다음 달" ${next?'disabled':''}>›</button></div>`;
+}
+function recChips(r, st){
+  const c = [];
+  if (!r.out) c.push('<span class="chip danger">퇴근 미기록</span>');
+  if (r.edits.length) c.push('<span class="chip warn">수정됨</span>');
+  return c.length ? `<div class="chips">${c.join('')}</div>` : '';
+}
+const range = r => `${hm(r.in)} – ${r.out ? hm(r.out) : '미기록'}`;
+
+function payBlock(emp, c, ym){
+  const curr = ym === ymOf(new Date());
+  const p = c.pay;
+  return `
+  <div class="total"><div class="k">${curr ? '이번 달 예상 급여 (세전)' : `${+ym.slice(5)}월 급여 (세전)`}</div>
+    <div class="v num">${won(p.total)}</div>
+    ${isClosed(ym) ? '<span class="chip ok">정산 마감됨</span>' : curr ? '<span class="chip">월말까지 계속 바뀌어요</span>' : ''}</div>
+  <h2 class="sec">항목별 금액</h2>
+  <div class="group">
+    <div class="kv"><div class="k">기본급<small>${dur(c.workMin)} × 시급 ${won(emp.wage)}</small></div><div class="num">${won(p.base)}</div></div>
+    <div class="kv"><div class="k">주휴수당<small>${c.weeks.filter(w=>w.ok).length}주 지급</small></div><div class="num">${won(p.juhyu)}</div></div>
+    <div class="kv sum"><div>합계</div><div class="num">${won(p.total)}</div></div>
+  </div>
+  ${c.missing ? `<p class="note" style="color:var(--danger)">퇴근 미기록 ${c.missing}건은 계산에서 빠졌어요. 기록을 고치면 반영돼요.</p>` : ''}
+  <h2 class="sec">주휴수당 주별 현황 <span class="r">일요일이 속한 달에 포함</span></h2>
+  <div class="group">${c.weeks.length ? c.weeks.map(w => `
+    <div class="row"><div class="main"><div class="t">${mdLabel(w.ws)} – ${mdLabel(w.sun)}</div><div class="s">${w.status}</div></div>
+    <div class="end num">${w.ok ? won(w.amount) : '–'}</div></div>`).join('') : '<div class="empty">이 달에 해당하는 주가 없어요</div>'}</div>`;
+}
+
+/* ---------- 직원 화면 ---------- */
+function empHome(emp){
+  const now = new Date(), cur = current(emp.id), st = stale(emp.id);
+  const todays = recsOf(emp.id).filter(r => r.date === ymd(now) && r.out).sort((a,b) => a.in - b.in);
+  let chip, big, sub, banner = '';
+  if (cur){ chip = '<span class="chip st-on">근무 중</span>'; big = `${hm(cur.in)}에 출근했어요`; sub = `<span class="num" data-elapsed="${cur.in}">${dur((Date.now()-cur.in)/60000)}</span>째 근무 중`; }
+  else if (todays.length){ chip = '<span class="chip st-done">퇴근 완료</span>'; big = `${hm(todays[todays.length-1].out)}에 퇴근했어요`; sub = '오늘도 수고하셨어요'; }
+  else { chip = '<span class="chip st-before">출근 전</span>'; big = '아직 출근 전이에요'; sub = '출근하면 아래 버튼을 눌러주세요'; }
+  for (const r of st.slice(0,1)){
+    const can = empCanEdit(r.date);
+    banner += `<div class="banner danger"><span>${dLabel(r.date)} 퇴근 기록이 없어요</span>
+      ${can ? `<button data-action="edit" data-emp="${emp.id}" data-date="${r.date}" data-rec="${r.id}">고치기</button>` : ''}</div>`;
+  }
+  return `<section class="home">
+    <p class="today">${now.getMonth()+1}월 ${now.getDate()}일 ${WD[now.getDay()]}요일</p>
+    ${chip}
+    <p class="big">${big}</p>
+    <p class="sub2">${sub}</p>
+    ${banner}
+  </section>
+  <div class="cta"><div class="cta-in"><button class="punch ${cur?'out':''}" data-action="punch">${cur ? '퇴근하기' : '출근하기'}</button></div></div>`;
+}
+
+function empRecords(emp){
+  const ym = ui.month, c = computeMonth(emp, ym);
+  const [y,m] = ym.split('-').map(Number);
+  const first = new Date(y,m-1,1), last = new Date(y,m,0), today = sod(new Date()), empStart = parseYmd(emp.start);
+  const mine = recsOf(emp.id), cur = current(emp.id);
+  if (!ui.selDate || ui.selDate.slice(0,7) !== ym) ui.selDate = ymOf(today) === ym ? ymd(today) : ymd(first);
+  let cells = '', days = 0;
+  for (let i = 0; i < first.getDay(); i++) cells += '<div></div>';
+  for (let dn = 1; dn <= last.getDate(); dn++){
+    const d = new Date(y,m-1,dn), ds = ymd(d), recs = mine.filter(r => r.date === ds);
+    const work = recs.reduce((a,r) => a + (c.recStats[r.id] ? c.recStats[r.id].work : 0), 0);
+    const working = recs.some(r => r === cur), missing = recs.some(r => !r.out && r !== cur);
+    if (recs.length) days++;
+    let mark = '<span class="cal-m">&nbsp;</span>';
+    if (working) mark = '<span class="cal-m on">근무중</span>';
+    else if (missing) mark = '<span class="cal-m bad">미기록</span>';
+    else if (work) mark = `<span class="cal-m">${Math.floor(work/60)}:${pad(work%60)}</span>`;
+    const cls = [d.getDay()===0?'sun':'', d.getDay()===6?'sat':'', ds===ymd(today)?'today':'', ds===ui.selDate?'sel':''].join(' ');
+    cells += `<button class="cal-c ${cls}" data-action="selDate" data-date="${ds}" ${d > today ? 'disabled' : ''} aria-label="${dLabel(ds)}${work ? ', ' + dur(work) : ''}" ${ds===ui.selDate?'aria-pressed="true"':''}>
+      <span class="cal-n">${dn}</span>${mark}${recs.some(r => r.edits.length) ? '<i class="cal-e"></i>' : ''}</button>`;
+  }
+  // 선택한 날
+  const sd = ui.selDate, drecs = mine.filter(r => r.date === sd).sort((a,b) => a.in - b.in), sdD = parseYmd(sd);
+  let detail = '';
+  for (const r of drecs){
+    const st = c.recStats[r.id];
+    detail += `<button class="row" data-action="edit" data-emp="${emp.id}" data-date="${sd}" data-rec="${r.id}">
+      <div class="main"><div class="t num">${range(r)}</div>${st ? `<div class="s">휴게 ${st.brk}분 제외</div>` : ''}${recChips(r, st)}</div>
+      <div class="end num">${st ? dur(st.work) : r === cur ? '근무 중' : ''}</div></button>`;
+  }
+  if (!drecs.length){
+    detail = empCanEdit(sd) && sdD <= today
+      ? `<div class="empty">기록이 없어요</div><div style="padding:0 16px 12px"><button class="btn block" data-action="edit" data-emp="${emp.id}" data-date="${sd}">기록 추가하기</button></div>`
+      : '<div class="empty">기록이 없어요</div>';
+  }
+  return monthNav() + `
+    <p class="note" style="margin-top:0">${days}일 출근, 총 ${dur(c.workMin)} 근무</p>
+    <div class="cal">
+      <div class="cal-h">${WD.map((w,i) => `<span class="${i===0?'sun':i===6?'sat':''}">${w}</span>`).join('')}</div>
+      <div class="cal-g">${cells}</div>
+      <div class="cal-legend"><span><i class="cal-e" style="position:static;display:inline-block"></i> 수정한 기록</span><span>숫자는 휴게 뺀 근무시간</span></div>
+    </div>
+    <h2 class="sec">${dLabel(sd)}</h2>
+    <div class="group">${detail}</div>
+    <p class="note">근무일로부터 7일 안에는 직접 고칠 수 있어요. 고친 기록은 관리자에게 표시돼요.</p>`;
+}
+
+function empPay(emp){
+  const c = computeMonth(emp, ui.month);
+  return monthNav() + payBlock(emp, c, ui.month) +
+    `<p class="note">시급 ${won(emp.wage)} 기준이에요. 주휴수당은 한 주에 실제 15시간 이상 일한 주에 붙어요. 세금과 4대보험 공제 전 금액이에요.</p>`;
+}
+
+/* ---------- 관리자 화면 ---------- */
+function adminToday(){
+  const now = new Date(), td = ymd(now), joined = S.employees.filter(e => e.joined);
+  let working = 0, done = 0, before = 0, rows = '';
+  for (const e of joined){
+    const cur = current(e.id), todays = recsOf(e.id).filter(r => r.date === td && r.out).sort((a,b) => a.in - b.in);
+    let label, sub, chip;
+    if (cur){ working++; label = '근무 중'; chip = 'ok'; sub = `${hm(cur.in)} 출근, <span class="num" data-elapsed="${cur.in}">${dur((Date.now()-cur.in)/60000)}</span>째`; }
+    else if (todays.length){ done++; label = '퇴근'; chip = ''; sub = todays.map(range).join(', '); }
+    else { before++; label = '미출근'; chip = ''; sub = '오늘 출근 기록이 없어요'; }
+    rows += `<div class="row"><div class="main"><div class="t">${esc(e.name)}</div><div class="s">${sub}</div></div><div class="end"><span class="chip ${chip}">${label}</span></div></div>`;
+  }
+  const issues = [];
+  for (const e of joined) for (const r of stale(e.id)) issues.push({e, r, t:'퇴근 미기록', k:'danger'});
+  for (const r of S.records){
+    const last = r.edits[r.edits.length-1];
+    if (last && last.by !== '관리자' && Date.now() - last.at < 4*DAY){ const e = empById(r.empId); if (e) issues.push({e, r, t:'직원이 수정함', k:'warn'}); }
+  }
+  const pending = S.employees.filter(e => !e.joined);
+  return `<div class="monthnav" style="margin-bottom:0"><b>${now.getMonth()+1}월 ${now.getDate()}일 ${WD[now.getDay()]}요일</b></div>
+    <p class="note" style="margin-top:2px">근무 중 ${working}명, 퇴근 ${done}명, 미출근 ${before}명</p>
+    <h2 class="sec">직원 현황</h2><div class="group">${rows || '<div class="empty">가입한 직원이 없어요. 직원 탭에서 초대하세요.</div>'}</div>
+    <h2 class="sec">확인이 필요한 기록</h2><div class="group">${issues.length ? issues.map(x => `
+      <button class="row" data-action="edit" data-emp="${x.e.id}" data-date="${x.r.date}" data-rec="${x.r.id}">
+        <div class="main"><div class="t">${esc(x.e.name)} ${dLabel(x.r.date)}</div><div class="s num">${range(x.r)}</div></div>
+        <div class="end"><span class="chip ${x.k}">${x.t}</span></div></button>`).join('') : '<div class="empty">확인할 기록이 없어요</div>'}</div>
+    ${pending.length ? `<h2 class="sec">가입 대기</h2><div class="group">${pending.map(e => `<button class="row" data-action="emp" data-id="${e.id}"><div class="main"><div class="t">${esc(e.name)}</div><div class="s">초대 링크를 보냈지만 아직 가입하지 않았어요</div></div><div class="end"><span class="chip">대기</span></div></button>`).join('')}</div>` : ''}`;
+}
+
+function adminRecords(){
+  const joined = S.employees.filter(e => e.joined);
+  const list = S.records.filter(r => r.date.slice(0,7) === ui.month && (ui.filterEmp === 'all' || r.empId === ui.filterEmp) && (!ui.onlyEdited || r.edits.length) && empById(r.empId))
+    .sort((a,b) => b.in - a.in);
+  const cache = {};
+  const st = r => { const e = empById(r.empId); cache[e.id] = cache[e.id] || computeMonth(e, ui.month); return cache[e.id].recStats[r.id]; };
+  return monthNav() + `<div class="filters">
+      <select data-change="filterEmp" aria-label="직원 선택"><option value="all">전체 직원</option>${joined.map(e => `<option value="${e.id}" ${ui.filterEmp===e.id?'selected':''}>${esc(e.name)}</option>`).join('')}</select>
+      <button class="toggle" data-action="onlyEdited" aria-pressed="${ui.onlyEdited}">수정된 기록만</button></div>
+    <div class="btns"><button class="btn primary block" data-action="addRec">기록 추가하기</button></div>
+    ${isClosed(ui.month) ? '<p class="note">이 달은 정산 마감돼서 기록을 고칠 수 없어요. 정산 탭에서 마감을 풀 수 있어요.</p>' : ''}
+    <h2 class="sec">${list.length}건</h2>
+    <div class="group">${list.length ? list.map(r => { const s = st(r); return `
+      <button class="row" data-action="edit" data-emp="${r.empId}" data-date="${r.date}" data-rec="${r.id}">
+        <div class="main"><div class="t">${esc(empById(r.empId).name)} <span class="muted" style="font-weight:400">${dLabel(r.date)}</span></div>
+        <div class="s num">${range(r)}</div>${recChips(r, s)}</div>
+        <div class="end num">${s ? dur(s.work) : ''}</div></button>`; }).join('') : '<div class="empty">조건에 맞는 기록이 없어요</div>'}</div>`;
+}
+
+function adminPay(){
+  const joined = S.employees.filter(e => e.joined), closed = isClosed(ui.month);
+  let sum = 0, rows = '';
+  for (const e of joined){
+    const c = computeMonth(e, ui.month); sum += c.pay.total;
+    const open = ui.expanded === e.id;
+    rows += `<button class="row" data-action="expand" data-id="${e.id}" aria-expanded="${open}">
+      <div class="main"><div class="t">${esc(e.name)}</div><div class="s num">근무 ${dur(c.workMin)}, 주휴수당 ${won(c.pay.juhyu)}</div>
+      ${c.missing ? `<div class="chips"><span class="chip danger">퇴근 미기록 ${c.missing}건</span></div>` : ''}</div>
+      <div class="end num"><b>${won(c.pay.total)}</b></div></button>`;
+    if (open) rows += `<div style="padding:0 12px 14px;border-top:1px solid var(--line);background:var(--surface2)">${payBlock(e, c, ui.month)}</div>`;
+  }
+  return monthNav() + `
+    <div class="total"><div class="k">${ymLabel(ui.month)} 급여 합계 (세전)</div><div class="v num">${won(sum)}</div>
+      ${closed ? '<span class="chip ok">정산 마감됨</span>' : '<span class="chip">마감 전</span>'}</div>
+    <h2 class="sec">직원별 <span class="r">눌러서 상세 보기</span></h2>
+    <div class="group">${rows || '<div class="empty">가입한 직원이 없어요</div>'}</div>
+    <div class="btns">
+      <button class="btn ${closed?'':'primary'}" data-action="close">${closed ? '마감 풀기' : '이 달 정산 마감하기'}</button>
+      <button class="btn" data-action="csv">엑셀용 CSV 내보내기</button>
+    </div>
+    <p class="note">마감하면 그 달 기록은 직원이 고칠 수 없게 잠겨요. 계산 결과는 실제 지급 전에 노무사나 급여 담당자에게 확인받으세요.</p>`;
+}
+/* ---------- 시트 ---------- */
+function sheetView(){
+  const sh = ui.sheet; let body = '';
+  if (sh.type === 'edit') body = editSheet(sh);
+  if (sh.type === 'emp') body = empSheet(sh);
+  if (sh.type === 'add') body = addSheet(sh);
+  return `<div class="scrim" data-action="scrim"><div class="sheet" role="dialog" aria-modal="true"><div class="handle"></div>
+    <button class="close" data-action="closeSheet" aria-label="닫기">✕</button>${body}</div></div>`;
+}
+function editSheet(sh){
+  const emp = empById(sh.empId), rec = sh.recId ? S.records.find(r => r.id === sh.recId) : null;
+  const admin = me.role === 'admin';
+  const can = admin ? !isClosed(sh.date.slice(0,7)) : empCanEdit(sh.date);
+  let why = '';
+  if (!can) why = isClosed(sh.date.slice(0,7)) ? '정산이 마감된 달이라 고칠 수 없어요.' : '근무일로부터 7일이 지나서 직접 고칠 수 없어요. 관리자에게 수정을 요청하세요.';
+  const hist = rec && rec.edits.length ? `<div class="hist">${rec.edits.map(x => `<p>${x.prevIn ? hm(x.prevIn) : '기록 없음'} – ${x.prevOut ? hm(x.prevOut) : x.prevIn ? '미기록' : ''} 에서 ${hm(x.newIn)} – ${x.newOut ? hm(x.newOut) : '미기록'}으로
+    <span>${esc(x.by)}, ${new Date(x.at).getMonth()+1}월 ${new Date(x.at).getDate()}일 ${hm(x.at)}에 수정. 사유: ${esc(x.reason)}</span></p>`).join('')}</div>` : '';
+  const st = rec && rec.out ? statOf(emp, rec) : null;
+  return `<h3>${dLabel(sh.date)}</h3><p class="sub">${esc(emp.name)}${rec ? `, ${range(rec)}${st ? `, 근무 ${dur(st.work)}` : ''}` : ', 기록 없음'}</p>
+    ${hist ? `<h2 class="sec" style="margin-top:16px">수정 이력</h2>${hist}` : ''}
+    ${can ? `
+      <div class="two">
+        <label class="field"><span>출근</span><input type="time" id="f-in" value="${rec ? hm(rec.in) : ''}"></label>
+        <label class="field"><span>퇴근</span><input type="time" id="f-out" value="${rec && rec.out ? hm(rec.out) : ''}"></label>
+      </div>
+      <p class="note">퇴근이 출근보다 이르면 다음 날 퇴근으로 계산해요.</p>
+      ${admin ? `<label class="field"><span>휴게시간</span><select id="f-break">
+        <option value="auto" ${!rec || rec.breakMin==null ? 'selected':''}>자동 (4시간 이상 30분, 8시간 30분 이상 1시간)</option>
+        ${[0,30,60,90].map(n => `<option value="${n}" ${rec && rec.breakMin===n ? 'selected':''}>${n}분</option>`).join('')}</select></label>` : ''}
+      <label class="field"><span>수정 사유</span><textarea id="f-reason" placeholder="예: 퇴근 버튼을 깜빡했어요"></textarea>
+        <div class="hint">${admin ? '사유와 원래 시각이 이력에 남아요.' : '사유와 원래 시각이 관리자에게 함께 보여요.'}</div></label>
+      <button class="btn primary block" style="margin-top:16px" data-action="saveEdit">${rec ? '수정 저장' : '기록 추가'}</button>`
+    : `<p class="banner" style="margin-top:16px">${why}</p>`}`;
+}
+
+/* ---------- 관리자: 직원 ---------- */
+function adminStaff(){
+  const co = S.company;
+  return `<h2 class="sec">직원 ${S.employees.length}명</h2>
+    <div class="group">${S.employees.length ? S.employees.map(e => `
+      <button class="row" data-action="emp" data-id="${e.id}">
+        <div class="main"><div class="t">${esc(e.name)}</div><div class="s">${e.joined ? `아이디 ${esc(e.loginId)}` : '가입 대기'}</div>
+          ${!e.joined || e.wage < MIN_WAGE ? `<div class="chips">${e.joined ? '' : '<span class="chip warn">초대 링크 보냄</span>'}${e.wage < MIN_WAGE ? '<span class="chip danger">최저임금 미만</span>' : ''}</div>` : ''}</div>
+        <div class="end"><div class="small muted" style="font-weight:500">시급</div><div class="num">${won(e.wage)}</div></div></button>`).join('') : '<div class="empty">아직 직원이 없어요</div>'}</div>
+    <p class="note">직원을 누르면 시급을 바꾸거나 초대 링크를 다시 볼 수 있어요.</p>
+    <div class="btns"><button class="btn primary block" data-action="emp" data-id="">직원 초대하기</button></div>
+    <h2 class="sec">사업장 설정</h2>
+    <div class="group">
+      <div class="switch"><span>사업장 이름</span><input data-change="coName" value="${esc(co.name)}" aria-label="사업장 이름" style="text-align:right;border:0;background:none;padding:4px;max-width:55%"></div>
+    </div>`;
+}
+function empSheet(sh){
+  const e = sh.id ? empById(sh.id) : null, isNew = !e;
+  const v = e || {name:'', wage:MIN_WAGE};
+  let extra = '';
+  if (e && !e.joined){
+    const expired = !e.inviteExpires || Date.now() > e.inviteExpires, link = joinLink(e.inviteToken);
+    extra = `<h2 class="sec">초대 링크</h2>
+      ${expired ? '<p class="banner danger">링크가 만료됐어요. 새 링크를 만들어 다시 보내세요.</p>' :
+        `<p class="note" style="margin-top:0">${Math.ceil((e.inviteExpires-Date.now())/DAY)}일 뒤 만료돼요. 한 번 가입하면 바로 만료돼요.</p>
+        <div class="linkbox"><input id="f-link" readonly value="${link}" aria-label="초대 링크"><button class="btn" data-action="copy">복사</button></div>
+        ${navigator.share ? `<div class="btns"><button class="btn primary block" data-action="share" data-name="${esc(e.name)}">카톡·문자로 보내기</button></div>` : ''}`}
+      <div class="btns"><button class="btn" data-action="newLink" data-id="${e.id}">새 링크 만들기</button></div>`;
+  }
+  if (e && e.joined){
+    const armed = ui.relinkArm === e.id;
+    extra = `<div class="group" style="margin-top:16px;background:var(--surface2)"><div class="kv"><div class="k">로그인 아이디</div><div>${esc(e.loginId)}</div></div></div>
+      <p class="note">비밀번호를 잊었거나 로그인이 안 되면 새 초대 링크를 보내 다시 가입하게 하세요. 지금까지의 기록은 그대로 남아요.</p>
+      <div class="btns"><button class="btn" data-action="newLink" data-id="${e.id}" style="${armed ? 'color:var(--danger)' : ''}">${armed ? '한 번 더 누르면 지금 로그인이 끊겨요' : '새 초대 링크 만들기'}</button></div>`;
+  }
+  return `<h3>${isNew ? '직원 초대하기' : esc(e.name)}</h3><p class="sub">${isNew ? '저장하면 이 직원 전용 초대 링크가 만들어져요.' : e.joined ? '가입 완료' : '가입 대기 중'}</p>
+    ${extra}
+    <label class="field"><span>이름</span><input id="f-name" value="${esc(v.name)}" placeholder="홍길동"></label>
+    <label class="field"><span>시급</span><div class="wagebox"><input id="f-wage" inputmode="numeric" data-input="wage" value="${v.wage}" aria-label="시급"><b>원</b></div>
+      <div class="hint ${v.wage < MIN_WAGE ? 'warn' : ''}" id="wage-hint">${v.wage < MIN_WAGE ? `최저시급 ${won(MIN_WAGE)}보다 낮아요` : `2026년 최저시급 ${won(MIN_WAGE)}`}</div></label>
+    <button class="btn primary block" style="margin-top:18px" data-action="saveEmp" data-id="${e ? e.id : ''}">${isNew ? '저장하고 초대 링크 만들기' : '저장'}</button>`;
+}
+
+function addSheet(sh){
+  const emps = S.employees, today = ymd(new Date());
+  const def = ui.filterEmp !== 'all' ? ui.filterEmp : (emps[0] ? emps[0].id : '');
+  return `<h3>기록 추가하기</h3><p class="sub">출퇴근 버튼을 못 누른 날의 기록을 직접 넣어요.</p>
+    <label class="field"><span>직원</span><select id="a-emp">${emps.map(e => `<option value="${e.id}" ${e.id===def?'selected':''}>${esc(e.name)}</option>`).join('')}</select></label>
+    <label class="field"><span>날짜</span><input type="date" id="a-date" max="${today}" value="${today}"></label>
+    <div class="two">
+      <label class="field"><span>출근</span><input type="time" id="f-in"></label>
+      <label class="field"><span>퇴근</span><input type="time" id="f-out"></label>
+    </div>
+    <p class="note">퇴근이 출근보다 이르면 다음 날 퇴근으로 계산해요.</p>
+    <label class="field"><span>휴게시간</span><select id="f-break">
+      <option value="auto" selected>자동 (4시간 이상 30분, 8시간 30분 이상 1시간)</option>
+      ${[0,30,60,90].map(n => `<option value="${n}">${n}분</option>`).join('')}</select></label>
+    <label class="field"><span>사유</span><textarea id="f-reason" placeholder="예: 출근 버튼을 못 눌렀다고 연락받음"></textarea>
+      <div class="hint">사유가 수정 이력에 남아요.</div></label>
+    <button class="btn primary block" style="margin-top:16px" data-action="saveAdd">기록 추가</button>`;
+}
+
+/* ---------- 로그인·가입 화면 ---------- */
+const coName = () => S.company ? esc(S.company.name) : '';
+function setupView(){
+  return `<section class="join"><p class="muted" style="margin:0 0 6px">처음 설정</p>
+    <h1>관리자 계정을<br>만들어 주세요</h1>
+    <p class="muted">이 화면은 처음 한 번만 나와요. 여기서 만든 계정이 관리자가 돼요.</p>
+    <label class="field"><span>사업장 이름</span><input id="f-co" placeholder="예: 한결상회"></label>
+    <label class="field"><span>관리자 아이디</span><input id="f-id" autocapitalize="off" autocomplete="username" placeholder="영문 소문자, 숫자 3~20자"></label>
+    <label class="field"><span>비밀번호</span><input id="f-pw" type="password" autocomplete="new-password" placeholder="6자리 이상"></label>
+    <label class="field"><span>비밀번호 확인</span><input id="f-pw2" type="password" autocomplete="new-password"></label>
+    <button class="btn primary block" style="margin-top:18px" data-action="setup">관리자 계정 만들기</button></section>`;
+}
+function loginView(){
+  return `<section class="join"><p class="muted" style="margin:0 0 6px">${coName()}</p>
+    <h1>출퇴근 기록</h1>
+    <label class="field"><span>아이디</span><input id="f-id" autocapitalize="off" autocomplete="username"></label>
+    <label class="field"><span>비밀번호</span><input id="f-pw" type="password" autocomplete="current-password"></label>
+    <button class="btn primary block" style="margin-top:18px" data-action="login">로그인</button>
+    <p class="note">처음 쓰신다면 관리자에게 받은 초대 링크로 가입해 주세요.</p></section>`;
+}
+function joinView(){
+  if (!joinInfo || joinInfo.used || tsMs(joinInfo.expiresAt) < Date.now())
+    return `<section class="join"><h1>이 초대 링크는<br>쓸 수 없어요</h1><p class="muted">이미 사용했거나 만료된 링크예요. 관리자에게 새 링크를 요청해 주세요.</p>
+      <button class="btn" data-action="leaveJoin">로그인 화면으로</button></section>`;
+  if (auth.currentUser)
+    return `<section class="join"><h1>다른 계정으로<br>로그인돼 있어요</h1><p class="muted">로그아웃한 뒤에 가입할 수 있어요.</p>
+      <button class="btn primary block" data-action="logout">로그아웃하고 가입하기</button></section>`;
+  return `<section class="join"><p class="muted" style="margin:0 0 6px">${coName()}</p>
+    <h1>${esc(joinInfo.name)}님,<br>출퇴근 기록에 초대됐어요</h1>
+    <p class="muted">로그인할 때 쓸 아이디와 비밀번호를 정해 주세요.</p>
+    <label class="field"><span>아이디</span><input id="f-id" autocapitalize="off" autocomplete="username" placeholder="영문 소문자, 숫자 3~20자"></label>
+    <label class="field"><span>비밀번호</span><input id="f-pw" type="password" autocomplete="new-password" placeholder="6자리 이상"></label>
+    <label class="field"><span>비밀번호 확인</span><input id="f-pw2" type="password" autocomplete="new-password"></label>
+    <button class="btn primary block" style="margin-top:18px" data-action="join">가입하고 시작하기</button>
+    <p class="note">가입한 뒤 브라우저 메뉴에서 "홈 화면에 추가"를 누르면 앱처럼 쓸 수 있어요.</p></section>`;
+}
+const noAccessView = () => `<section class="join"><h1>이 계정은<br>쓸 수 없어요</h1><p class="muted">관리자가 새 초대 링크를 보냈다면 그 링크로 다시 가입해 주세요.</p>
+  <button class="btn" data-action="logout">로그아웃</button></section>`;
+const loadingView = () => `<section class="join" style="text-align:center;padding-top:30vh"><p class="muted">불러오는 중이에요</p></section>`;
+
+/* ---------- 렌더 ---------- */
+function render(){
+  let h = '';
+  if (phase === 'loading') h = loadingView();
+  else if (phase === 'setup') h = setupView();
+  else if (phase === 'login') h = loginView();
+  else if (phase === 'join') h = joinView();
+  else if (phase === 'noaccess') h = noAccessView();
+  else if (me.role === 'admin'){
+    h += topbar(S.company.name, '관리자');
+    h += `<main>${({today:adminToday, records:adminRecords, pay:adminPay, staff:adminStaff})[ui.tab]()}</main>`;
+    h += tabs([['today','오늘'],['records','기록'],['pay','정산'],['staff','직원']]);
+  } else {
+    const emp = empById(me.empId);
+    if (!emp || !S.loaded) h = loadingView();
+    else {
+      h += topbar(S.company.name, emp.name);
+      h += `<main>${({home:empHome, records:empRecords, pay:empPay})[ui.tab](emp)}</main>`;
+      h += tabs([['home','출퇴근'],['records','내 기록'],['pay','급여']]);
+    }
+  }
+  document.getElementById('app').innerHTML = `<div class="app ${h.includes('class="cta"')?'has-cta':''}">${h}</div>${ui.sheet && phase === 'app' ? sheetView() : ''}`;
+}
+// 데이터가 바뀔 때: 입력 중인 시트가 열려 있으면 화면을 다시 그리지 않음
+function renderData(){ if (phase === 'app' && !ui.sheet) render(); }
+let toastT;
+function toast(msg){ const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 2600); }
+setInterval(() => {
+  document.querySelectorAll('[data-elapsed]').forEach(el => el.textContent = dur((Date.now() - +el.dataset.elapsed)/60000));
+}, 1000);
+function errMsg(e){
+  const c = (e && e.code) || '';
+  if (c.includes('permission-denied')) return '권한이 없어요. 마감된 달이거나 수정 기한이 지났을 수 있어요';
+  if (['auth/invalid-credential','auth/wrong-password','auth/user-not-found','auth/invalid-login-credentials','auth/invalid-email'].includes(c)) return '아이디나 비밀번호가 맞지 않아요';
+  if (c === 'auth/too-many-requests') return '시도가 너무 많아요. 잠시 후 다시 해주세요';
+  if (c === 'auth/weak-password') return '비밀번호는 6자리 이상이어야 해요';
+  if (c === 'auth/network-request-failed' || c === 'unavailable') return '인터넷 연결을 확인해 주세요';
+  if (c === 'auth/operation-not-allowed') return 'Firebase에서 이메일/비밀번호 로그인을 켜주세요';
+  if (c === 'id-taken') return '이미 쓰고 있는 아이디예요. 다른 아이디를 정해주세요';
+  console.error(e);
+  return '문제가 생겼어요. 다시 시도해 주세요';
+}
+function onErr(e){
+  console.error(e);
+  if (me && me.role === 'emp' && e.code === 'permission-denied'){ stopData(); phase = 'noaccess'; render(); }
+  else toast(errMsg(e));
+}
+
+/* ---------- 데이터 구독 ---------- */
+let unsubs = [], recUnsub = null, adminFrom = null;
+function stopData(){ unsubs.forEach(u => u()); unsubs = []; if (recUnsub) recUnsub(); recUnsub = null; adminFrom = null; S.employees = []; S.records = []; S.loaded = false; }
+function subscribeAdminRecords(){
+  const nowYm = ymOf(new Date()), base = ui.month < nowYm ? ui.month : nowYm;
+  const [y,m] = base.split('-').map(Number);
+  const from = ymd(addDays(weekStart(new Date(y,m-1,1)), -7));
+  if (recUnsub && adminFrom && from >= adminFrom) return;
+  if (recUnsub) recUnsub();
+  adminFrom = from;
+  recUnsub = onSnapshot(query(collection(db,'att_records'), where('date','>=',from)), s => { S.records = s.docs.map(mapRec); S.loaded = true; renderData(); }, onErr);
+}
+function subscribeAdmin(){
+  unsubs.push(onSnapshot(collection(db,'att_employees'), s => { S.employees = s.docs.map(mapEmp).sort((a,b) => a.name.localeCompare(b.name,'ko')); renderData(); }, onErr));
+  subscribeAdminRecords();
+}
+function subscribeEmp(){
+  unsubs.push(onSnapshot(doc(db,'att_employees',me.empId), s => { S.employees = s.exists() ? [mapEmp(s)] : []; renderData(); }, onErr));
+  unsubs.push(onSnapshot(query(collection(db,'att_records'), where('empId','==',me.empId)), s => { S.records = s.docs.map(mapRec); S.loaded = true; renderData(); }, onErr));
+}
+async function loadInvite(){
+  try { const s = await getDoc(doc(db,'att_invites',joinToken)); joinInfo = s.exists() ? s.data() : null; }
+  catch(e){ joinInfo = null; }
+}
+async function route(){
+  stopData(); me = null; ui.sheet = null;
+  const user = auth.currentUser;
+  if (!S.company){ phase = 'setup'; return render(); }
+  if (joinToken){ phase = 'join'; await loadInvite(); return render(); }
+  if (!user){ phase = 'login'; return render(); }
+  if (S.company.adminUid === user.uid){
+    me = {uid:user.uid, role:'admin'};
+    if (!['today','records','pay','staff'].includes(ui.tab)) ui.tab = 'today';
+    phase = 'app'; subscribeAdmin(); return render();
+  }
+  try {
+    const u = await getDoc(doc(db,'att_users',user.uid));
+    if (!u.exists()){ phase = 'noaccess'; return render(); }
+    me = {uid:user.uid, role:'emp', empId:u.data().empId};
+    if (!['home','records','pay'].includes(ui.tab)) ui.tab = 'home';
+    phase = 'app'; subscribeEmp(); render();
+  } catch(e){ phase = 'noaccess'; render(); }
+}
+
+/* ---------- 동작 ---------- */
+function toTs(date, t){ const [h,m] = t.split(':').map(Number); const d = parseYmd(date); d.setHours(h,m,0,0); return d.getTime(); }
+const ID_RE = /^[a-z0-9._-]{3,20}$/;
+async function guarded(fn){ if (busy) return; busy = true; try { await fn(); } catch(e){ toast(errMsg(e)); } finally { busy = false; } }
+async function signUpOrIn(id, pw){
+  try { return await createUserWithEmailAndPassword(auth, idEmail(id), pw); }
+  catch(e){
+    if (e.code !== 'auth/email-already-in-use') throw e;
+    try { return await signInWithEmailAndPassword(auth, idEmail(id), pw); } catch(e2){ throw {code:'id-taken'}; }
+  }
+}
+const A = {
+  tab(d){ ui.tab = d.k; ui.expanded = null; render(); scrollTo(0,0); },
+  month(d){ ui.month = shiftYm(ui.month, +d.d); ui.expanded = null; if (me && me.role === 'admin') subscribeAdminRecords(); render(); },
+  selDate(d){ ui.selDate = d.date; render(); },
+  onlyEdited(){ ui.onlyEdited = !ui.onlyEdited; render(); },
+  expand(d){ ui.expanded = ui.expanded === d.id ? null : d.id; render(); },
+  edit(d){ ui.sheet = {type:'edit', empId:d.emp, date:d.date, recId:d.rec || null}; render(); },
+  addRec(){ if (!S.employees.length) return toast('먼저 직원 탭에서 직원을 초대하세요'); ui.sheet = {type:'add'}; render(); },
+  saveAdd(){ guarded(async () => {
+    const empId = $('#a-emp').value, date = $('#a-date').value;
+    const tin = $('#f-in').value, tout = $('#f-out').value, reason = $('#f-reason').value.trim();
+    if (!empId) return toast('직원을 고르세요');
+    if (!date) return toast('날짜를 고르세요');
+    if (isClosed(date.slice(0,7))) return toast('정산이 마감된 달이에요. 정산 탭에서 마감을 풀어주세요');
+    if (!tin || !tout) return toast('출근과 퇴근 시각을 모두 입력하세요');
+    if (!reason) return toast('사유를 입력하세요');
+    const inTs = toTs(date, tin); let outTs = toTs(date, tout);
+    if (outTs <= inTs) outTs += DAY;
+    if (inTs > Date.now() || outTs > Date.now()) return toast('아직 지나지 않은 시각은 입력할 수 없어요');
+    const overlap = S.records.some(r => r.empId === empId && r.in < outTs && (r.out || Date.now()) > inTs);
+    if (overlap) return toast('그 시간에 이미 기록이 있어요. 기록 목록에서 수정해 주세요');
+    const bv = $('#f-break').value, brk = bv === 'auto' ? null : +bv;
+    const edit = {at:Date.now(), by:'관리자', prevIn:null, prevOut:null, newIn:inTs, newOut:outTs, reason};
+    await addDoc(collection(db,'att_records'), {empId, date, month:date.slice(0,7), dayTs:Timestamp.fromDate(parseYmd(date)),
+      in:Timestamp.fromMillis(inTs), out:Timestamp.fromMillis(outTs), breakMin:brk, edits:[edit], updatedAt:serverTimestamp()});
+    ui.sheet = null; ui.month = date.slice(0,7); subscribeAdminRecords(); render(); toast(`${empById(empId).name}님 ${dLabel(date)} 기록을 추가했어요`);
+  }); },
+  emp(d){ ui.sheet = {type:'emp', id:d.id || null}; ui.relinkArm = null; render(); },
+  closeSheet(){ ui.sheet = null; render(); },
+  scrim(d, el, ev){ if (ev.target === el){ ui.sheet = null; render(); } },
+  logout(){ guarded(async () => { await signOut(auth); }); },
+  leaveJoin(){ joinToken = null; history.replaceState(null, '', location.pathname); route(); },
+
+  setup(){ guarded(async () => {
+    const name = $('#f-co').value.trim(), id = $('#f-id').value.trim().toLowerCase(), pw = $('#f-pw').value, pw2 = $('#f-pw2').value;
+    if (!name) return toast('사업장 이름을 입력하세요');
+    if (!ID_RE.test(id)) return toast('아이디는 영문 소문자, 숫자 3~20자로 정하세요');
+    if (pw.length < 6) return toast('비밀번호는 6자리 이상이어야 해요');
+    if (pw !== pw2) return toast('비밀번호 확인이 일치하지 않아요');
+    suppressRoute = true;
+    try {
+      const cred = await signUpOrIn(id, pw);
+      const data = {name, adminUid:cred.user.uid, closed:[], createdAt:serverTimestamp()};
+      await setDoc(doc(db,'att_company','main'), data);
+      S.company = {name, adminUid:cred.user.uid, closed:[]};
+    } finally { suppressRoute = false; }
+    await route(); toast('관리자 계정을 만들었어요');
+  }); },
+
+  login(){ guarded(async () => {
+    const id = $('#f-id').value.trim().toLowerCase(), pw = $('#f-pw').value;
+    if (!id || !pw) return toast('아이디와 비밀번호를 입력하세요');
+    await signInWithEmailAndPassword(auth, idEmail(id), pw);
+  }); },
+
+  join(){ guarded(async () => {
+    const id = $('#f-id').value.trim().toLowerCase(), pw = $('#f-pw').value, pw2 = $('#f-pw2').value;
+    if (!ID_RE.test(id)) return toast('아이디는 영문 소문자, 숫자 3~20자로 정하세요');
+    if (pw.length < 6) return toast('비밀번호는 6자리 이상이어야 해요');
+    if (pw !== pw2) return toast('비밀번호 확인이 일치하지 않아요');
+    suppressRoute = true;
+    try {
+      const cred = await signUpOrIn(id, pw), uid = cred.user.uid;
+      const b = writeBatch(db);
+      b.update(doc(db,'att_invites',joinToken), {used:true, usedBy:uid});
+      b.update(doc(db,'att_employees',joinInfo.empId), {uid, joined:true, loginId:id});
+      b.set(doc(db,'att_users',uid), {empId:joinInfo.empId, token:joinToken});
+      try { await b.commit(); } catch(e){ await signOut(auth); throw e; }
+      joinToken = null; history.replaceState(null, '', location.pathname);
+    } finally { suppressRoute = false; }
+    await route(); toast('가입했어요. 환영해요');
+  }); },
+
+  punch(){ guarded(async () => {
+    const emp = empById(me.empId), cur = current(emp.id), now = new Date();
+    if (isClosed(ymOf(now))) return toast('정산이 마감된 달이라 기록할 수 없어요');
+    if (cur){
+      await updateDoc(doc(db,'att_records',cur.id), {out:serverTimestamp(), updatedAt:serverTimestamp()});
+      toast(`${hm(Date.now())} 퇴근 기록했어요`);
+    } else {
+      await addDoc(collection(db,'att_records'), {empId:emp.id, date:ymd(now), month:ymOf(now), dayTs:Timestamp.fromDate(sod(now)),
+        in:serverTimestamp(), out:null, breakMin:null, edits:[], updatedAt:serverTimestamp()});
+      toast(`${hm(Date.now())} 출근 기록했어요`);
+    }
+  }); },
+
+  saveEdit(){ guarded(async () => {
+    const sh = ui.sheet, admin = me.role === 'admin';
+    const tin = $('#f-in').value, tout = $('#f-out').value, reason = $('#f-reason').value.trim();
+    if (!tin) return toast('출근 시각을 입력하세요');
+    if (!reason) return toast('수정 사유를 입력하세요');
+    const inTs = toTs(sh.date, tin); let outTs = tout ? toTs(sh.date, tout) : null;
+    if (outTs != null && outTs <= inTs) outTs += DAY;
+    if (inTs > Date.now() || (outTs && outTs > Date.now())) return toast('아직 지나지 않은 시각은 입력할 수 없어요');
+    const rec = sh.recId ? S.records.find(r => r.id === sh.recId) : null;
+    const brk = admin ? ($('#f-break').value === 'auto' ? null : +$('#f-break').value) : (rec ? rec.breakMin : null);
+    const by = admin ? '관리자' : empById(sh.empId).name;
+    const edit = {at:Date.now(), by, prevIn:rec ? rec.in : null, prevOut:rec ? rec.out : null, newIn:inTs, newOut:outTs, reason};
+    const inT = Timestamp.fromMillis(inTs), outT = outTs ? Timestamp.fromMillis(outTs) : null;
+    if (!rec){
+      await addDoc(collection(db,'att_records'), {empId:sh.empId, date:sh.date, month:sh.date.slice(0,7), dayTs:Timestamp.fromDate(parseYmd(sh.date)),
+        in:inT, out:outT, breakMin:admin ? brk : null, edits:[edit], updatedAt:serverTimestamp()});
+    } else {
+      if (rec.in === inTs && rec.out === outTs && rec.breakMin === brk) return toast('바뀐 내용이 없어요');
+      const upd = {in:inT, out:outT, edits:[...rec.edits, edit], updatedAt:serverTimestamp()};
+      if (admin) upd.breakMin = brk;
+      await updateDoc(doc(db,'att_records',rec.id), upd);
+    }
+    ui.sheet = null; render(); toast(rec ? '수정했어요' : '기록을 추가했어요');
+  }); },
+
+  saveEmp(d){ guarded(async () => {
+    const name = $('#f-name').value.trim();
+    const wage = parseInt($('#f-wage').value.replace(/[^0-9]/g,''),10);
+    if (!name) return toast('이름을 입력하세요');
+    if (!wage) return toast('시급을 입력하세요');
+    if (d.id){
+      const e = empById(d.id), b = writeBatch(db);
+      b.update(doc(db,'att_employees',d.id), {name, wage});
+      if (!e.joined && e.inviteToken) b.update(doc(db,'att_invites',e.inviteToken), {name});
+      await b.commit(); ui.sheet = null; render(); toast('저장했어요');
+    } else {
+      const ref = doc(collection(db,'att_employees')), token = randToken(), exp = Timestamp.fromMillis(Date.now() + 7*DAY);
+      const b = writeBatch(db);
+      b.set(ref, {name, wage, start:ymd(new Date()), joined:false, uid:null, loginId:null, inviteToken:token, inviteExpires:exp, createdAt:serverTimestamp()});
+      b.set(doc(db,'att_invites',token), {empId:ref.id, name, expiresAt:exp, used:false, usedBy:null});
+      await b.commit();
+      if (!empById(ref.id)) S.employees.push({id:ref.id, name, wage, start:ymd(new Date()), joined:false, uid:null, loginId:null, inviteToken:token, inviteExpires:exp.toMillis()});
+      ui.sheet = {type:'emp', id:ref.id}; render(); toast('초대 링크를 만들었어요. 직원에게 보내주세요');
+    }
+  }); },
+
+  newLink(d){
+    const e = empById(d.id);
+    if (e.joined && ui.relinkArm !== e.id){ ui.relinkArm = e.id; render(); return; }
+    ui.relinkArm = null;
+    guarded(async () => {
+      const token = randToken(), exp = Timestamp.fromMillis(Date.now() + 7*DAY), b = writeBatch(db);
+      if (e.inviteToken) b.delete(doc(db,'att_invites',e.inviteToken));
+      b.set(doc(db,'att_invites',token), {empId:e.id, name:e.name, expiresAt:exp, used:false, usedBy:null});
+      b.update(doc(db,'att_employees',e.id), {inviteToken:token, inviteExpires:exp, joined:false, uid:null, loginId:null});
+      if (e.uid) b.delete(doc(db,'att_users',e.uid));
+      await b.commit(); render(); toast('새 초대 링크를 만들었어요');
+    });
+  },
+  async copy(){ const inp = $('#f-link'); try { await navigator.clipboard.writeText(inp.value); toast('링크를 복사했어요'); } catch(e){ inp.focus(); inp.select(); toast('링크를 길게 눌러 복사하세요'); } },
+  async share(d){ try { await navigator.share({title:'출퇴근 기록 초대', text:`${d.name}님, ${S.company.name} 출퇴근 기록 앱 초대 링크예요. 7일 안에 가입해 주세요.`, url:$('#f-link').value}); } catch(e){} },
+
+  close(){ guarded(async () => {
+    const ym = ui.month, ref = doc(db,'att_company','main');
+    if (isClosed(ym)){ await updateDoc(ref, {closed:arrayRemove(ym)}); toast(`${ymLabel(ym)} 마감을 풀었어요`); }
+    else { await updateDoc(ref, {closed:arrayUnion(ym)}); toast(`${ymLabel(ym)} 정산을 마감했어요`); }
+  }); },
+  csv(){
+    const head = ['이름','시급','근무시간(분)','기본급','주휴수당','합계(세전)','퇴근미기록'];
+    const lines = [head.join(',')];
+    for (const e of S.employees.filter(x => x.joined || recsOf(x.id).length)){
+      const c = computeMonth(e, ui.month), p = c.pay;
+      lines.push([`"${e.name.replace(/"/g,'""')}"`, e.wage, c.workMin, p.base, p.juhyu, p.total, c.missing].join(','));
+    }
+    const blob = new Blob(['\uFEFF' + lines.join('\n')], {type:'text/csv;charset=utf-8'});
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `급여정산_${ui.month}.csv`;
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  },
+};
+document.addEventListener('click', ev => {
+  const el = ev.target.closest('[data-action]'); if (!el) return;
+  const fn = A[el.dataset.action]; if (fn) fn(el.dataset, el, ev);
+});
+document.addEventListener('change', ev => {
+  const el = ev.target.closest('[data-change]'); if (!el) return;
+  if (el.dataset.change === 'filterEmp'){ ui.filterEmp = el.value; render(); }
+  if (el.dataset.change === 'coName'){ const v = el.value.trim(); if (v) guarded(async () => { await updateDoc(doc(db,'att_company','main'), {name:v}); toast('사업장 이름을 바꿨어요'); }); }
+});
+document.addEventListener('input', ev => {
+  if (ev.target.dataset.input === 'wage'){
+    const v = parseInt(ev.target.value.replace(/[^0-9]/g,''),10) || 0, h = $('#wage-hint');
+    h.className = 'hint' + (v && v < MIN_WAGE ? ' warn' : '');
+    h.textContent = v && v < MIN_WAGE ? `최저시급 ${won(MIN_WAGE)}보다 낮아요` : `2026년 최저시급 ${won(MIN_WAGE)}`;
+  }
+});
+document.addEventListener('keydown', ev => {
+  if (ev.key === 'Escape' && ui.sheet){ ui.sheet = null; render(); }
+  if (ev.key === 'Enter' && ev.target.tagName === 'INPUT' && ['login','setup','join'].includes(phase)){ A[phase] && A[phase](); }
+});
+
+/* ---------- 시작 ---------- */
+render();
+let companyReady = false;
+onSnapshot(doc(db,'att_company','main'), snap => {
+  const had = !!S.company;
+  S.company = snap.exists() ? snap.data() : null;
+  if (!companyReady){ companyReady = true; route(); }
+  else if (had !== !!S.company && !suppressRoute) route();
+  else renderData();
+}, e => { console.error(e); phase = 'login'; render(); toast('데이터베이스에 연결하지 못했어요. 보안 규칙을 확인해 주세요'); });
+onAuthStateChanged(auth, () => { if (companyReady && !suppressRoute) route(); });
+
+</script>
+</body>
+</html>
