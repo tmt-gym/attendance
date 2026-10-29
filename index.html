@@ -420,12 +420,16 @@ function empRecords(emp){
       <div class="main"><div class="t num">${range(r)}</div>${st ? `<div class="s">휴게 ${st.brk}분 제외</div>` : ''}${recChips(r, st)}</div>
       <div class="end num">${st ? dur(st.work) : r === cur ? '근무 중' : ''}</div></button>`;
   }
+  const canHere = empCanEdit(sd) && sdD <= today;
   if (!drecs.length){
-    detail = empCanEdit(sd) && sdD <= today
-      ? `<div class="empty">기록이 없어요</div><div style="padding:0 16px 12px"><button class="btn block" data-action="edit" data-emp="${emp.id}" data-date="${sd}">기록 추가하기</button></div>`
+    detail = canHere
+      ? `<div class="empty">아직 기록이 없어요</div><div style="padding:0 16px 14px"><button class="btn primary block" data-action="edit" data-emp="${emp.id}" data-date="${sd}">${sd === ymd(today) ? '오늘 근무 기록하기' : '이 날 근무 기록하기'}</button></div>`
       : '<div class="empty">기록이 없어요</div>';
+  } else if (canHere){
+    detail += `<div style="padding:4px 16px 12px"><button class="btn block" data-action="edit" data-emp="${emp.id}" data-date="${sd}">같은 날 기록 하나 더 추가</button></div>`;
   }
-  return monthNav() + `
+  const warn = stale(emp.id).slice(0,1).map(r => `<div class="banner danger"><span>${dLabel(r.date)} 퇴근 시각이 비어 있어요</span>${empCanEdit(r.date) ? `<button data-action="edit" data-emp="${emp.id}" data-date="${r.date}" data-rec="${r.id}">입력하기</button>` : ''}</div>`).join('');
+  return warn + monthNav() + `
     <p class="note" style="margin-top:0">${days}일 출근, 총 ${dur(c.workMin)} 근무</p>
     <div class="cal">
       <div class="cal-h">${WD.map((w,i) => `<span class="${i===0?'sun':i===6?'sat':''}">${w}</span>`).join('')}</div>
@@ -434,7 +438,7 @@ function empRecords(emp){
     </div>
     <h2 class="sec">${dLabel(sd)}</h2>
     <div class="group">${detail}</div>
-    <p class="note">근무일로부터 7일 안에는 직접 고칠 수 있어요. 고친 기록은 관리자에게 표시돼요.</p>`;
+    <p class="note">날짜를 눌러 출퇴근 시각을 기록하세요. 근무일로부터 7일 안에는 기록하고 고칠 수 있고, 한 번 기록한 뒤 바꾸면 수정 이력이 관리자에게 보여요.</p>`;
 }
 
 function empPay(emp){
@@ -530,7 +534,7 @@ function editSheet(sh){
   let why = '';
   if (!can) why = isClosed(sh.date.slice(0,7)) ? '정산이 마감된 달이라 고칠 수 없어요.' : '근무일로부터 7일이 지나서 직접 고칠 수 없어요. 관리자에게 수정을 요청하세요.';
   const hist = rec && rec.edits.length ? `<div class="hist">${rec.edits.map(x => `<p>${x.prevIn ? hm(x.prevIn) : '기록 없음'} – ${x.prevOut ? hm(x.prevOut) : x.prevIn ? '미기록' : ''} 에서 ${hm(x.newIn)} – ${x.newOut ? hm(x.newOut) : '미기록'}으로
-    <span>${esc(x.by)}, ${new Date(x.at).getMonth()+1}월 ${new Date(x.at).getDate()}일 ${hm(x.at)}에 수정. 사유: ${esc(x.reason)}</span></p>`).join('')}</div>` : '';
+    <span>${esc(x.by)}, ${new Date(x.at).getMonth()+1}월 ${new Date(x.at).getDate()}일 ${hm(x.at)}에 수정${x.reason ? `. 사유: ${esc(x.reason)}` : ''}</span></p>`).join('')}</div>` : '';
   const st = rec && rec.out ? statOf(emp, rec) : null;
   return `<h3>${dLabel(sh.date)}</h3><p class="sub">${esc(emp.name)}${rec ? `, ${range(rec)}${st ? `, 근무 ${dur(st.work)}` : ''}` : ', 기록 없음'}</p>
     ${hist ? `<h2 class="sec" style="margin-top:16px">수정 이력</h2>${hist}` : ''}
@@ -543,9 +547,8 @@ function editSheet(sh){
       ${admin ? `<label class="field"><span>휴게시간</span><select id="f-break">
         <option value="auto" ${!rec || rec.breakMin==null ? 'selected':''}>자동 (4시간 이상 30분, 8시간 30분 이상 1시간)</option>
         ${[0,30,60,90].map(n => `<option value="${n}" ${rec && rec.breakMin===n ? 'selected':''}>${n}분</option>`).join('')}</select></label>` : ''}
-      <label class="field"><span>수정 사유</span><textarea id="f-reason" placeholder="예: 퇴근 버튼을 깜빡했어요"></textarea>
-        <div class="hint">${admin ? '사유와 원래 시각이 이력에 남아요.' : '사유와 원래 시각이 관리자에게 함께 보여요.'}</div></label>
-      <button class="btn primary block" style="margin-top:16px" data-action="saveEdit">${rec ? '수정 저장' : '기록 추가'}</button>`
+      ${rec && !admin ? '<p class="note">이미 넣은 시각을 바꾸면 원래 시각이 관리자에게 함께 보여요.</p>' : ''}
+      <button class="btn primary block" style="margin-top:16px" data-action="saveEdit">${rec ? '저장' : '기록하기'}</button>`
     : `<p class="banner" style="margin-top:16px">${why}</p>`}`;
 }
 
@@ -606,8 +609,6 @@ function addSheet(sh){
     <label class="field"><span>휴게시간</span><select id="f-break">
       <option value="auto" selected>자동 (4시간 이상 30분, 8시간 30분 이상 1시간)</option>
       ${[0,30,60,90].map(n => `<option value="${n}">${n}분</option>`).join('')}</select></label>
-    <label class="field"><span>사유</span><textarea id="f-reason" placeholder="예: 출근 버튼을 못 눌렀다고 연락받음"></textarea>
-      <div class="hint">사유가 수정 이력에 남아요.</div></label>
     <button class="btn primary block" style="margin-top:16px" data-action="saveAdd">기록 추가</button>`;
 }
 
@@ -669,7 +670,7 @@ function render(){
     else {
       h += topbar(S.company.name, emp.name);
       h += `<main>${({home:empHome, records:empRecords, pay:empPay})[ui.tab](emp)}</main>`;
-      h += tabs([['home','출퇴근'],['records','내 기록'],['pay','급여']]);
+      h += tabs([['records','기록'],['pay','급여']]);
     }
   }
   document.getElementById('app').innerHTML = `<div class="app ${h.includes('class="cta"')?'has-cta':''}">${h}</div>${ui.sheet && phase === 'app' ? sheetView() : ''}`;
@@ -738,7 +739,7 @@ async function route(){
     const u = await getDoc(doc(db,'att_users',user.uid));
     if (!u.exists()){ phase = 'noaccess'; return render(); }
     me = {uid:user.uid, role:'emp', empId:u.data().empId};
-    if (!['home','records','pay'].includes(ui.tab)) ui.tab = 'home';
+    if (!['records','pay'].includes(ui.tab)) ui.tab = 'records';
     phase = 'app'; subscribeEmp(); render();
   } catch(e){ phase = 'noaccess'; render(); }
 }
@@ -764,12 +765,11 @@ const A = {
   addRec(){ if (!S.employees.length) return toast('먼저 직원 탭에서 직원을 초대하세요'); ui.sheet = {type:'add'}; render(); },
   saveAdd(){ guarded(async () => {
     const empId = $('#a-emp').value, date = $('#a-date').value;
-    const tin = $('#f-in').value, tout = $('#f-out').value, reason = $('#f-reason').value.trim();
+    const tin = $('#f-in').value, tout = $('#f-out').value, reason = '';
     if (!empId) return toast('직원을 고르세요');
     if (!date) return toast('날짜를 고르세요');
     if (isClosed(date.slice(0,7))) return toast('정산이 마감된 달이에요. 정산 탭에서 마감을 풀어주세요');
     if (!tin || !tout) return toast('출근과 퇴근 시각을 모두 입력하세요');
-    if (!reason) return toast('사유를 입력하세요');
     const inTs = toTs(date, tin); let outTs = toTs(date, tout);
     if (outTs <= inTs) outTs += DAY;
     if (inTs > Date.now() || outTs > Date.now()) return toast('아직 지나지 않은 시각은 입력할 수 없어요');
@@ -842,27 +842,31 @@ const A = {
 
   saveEdit(){ guarded(async () => {
     const sh = ui.sheet, admin = me.role === 'admin';
-    const tin = $('#f-in').value, tout = $('#f-out').value, reason = $('#f-reason').value.trim();
+    const tin = $('#f-in').value, tout = $('#f-out').value, reason = '';
     if (!tin) return toast('출근 시각을 입력하세요');
-    if (!reason) return toast('수정 사유를 입력하세요');
     const inTs = toTs(sh.date, tin); let outTs = tout ? toTs(sh.date, tout) : null;
     if (outTs != null && outTs <= inTs) outTs += DAY;
     if (inTs > Date.now() || (outTs && outTs > Date.now())) return toast('아직 지나지 않은 시각은 입력할 수 없어요');
     const rec = sh.recId ? S.records.find(r => r.id === sh.recId) : null;
+    const overlap = S.records.some(r => r.empId === sh.empId && r !== rec && r.in < (outTs || inTs + 1) && (r.out || Date.now()) > inTs);
+    if (overlap) return toast('그 시간에 이미 다른 기록이 있어요');
     const brk = admin ? ($('#f-break').value === 'auto' ? null : +$('#f-break').value) : (rec ? rec.breakMin : null);
     const by = admin ? '관리자' : empById(sh.empId).name;
+    const completing = !admin && rec && !rec.out && outTs && inTs === rec.in;
     const edit = {at:Date.now(), by, prevIn:rec ? rec.in : null, prevOut:rec ? rec.out : null, newIn:inTs, newOut:outTs, reason};
     const inT = Timestamp.fromMillis(inTs), outT = outTs ? Timestamp.fromMillis(outTs) : null;
     if (!rec){
       await addDoc(collection(db,'att_records'), {empId:sh.empId, date:sh.date, month:sh.date.slice(0,7), dayTs:Timestamp.fromDate(parseYmd(sh.date)),
-        in:inT, out:outT, breakMin:admin ? brk : null, edits:[edit], updatedAt:serverTimestamp()});
+        in:inT, out:outT, breakMin:admin ? brk : null, edits:admin ? [edit] : [], updatedAt:serverTimestamp()});
+    } else if (completing){
+      await updateDoc(doc(db,'att_records',rec.id), {out:outT, updatedAt:serverTimestamp()});
     } else {
       if (rec.in === inTs && rec.out === outTs && rec.breakMin === brk) return toast('바뀐 내용이 없어요');
       const upd = {in:inT, out:outT, edits:[...rec.edits, edit], updatedAt:serverTimestamp()};
       if (admin) upd.breakMin = brk;
       await updateDoc(doc(db,'att_records',rec.id), upd);
     }
-    ui.sheet = null; render(); toast(rec ? '수정했어요' : '기록을 추가했어요');
+    ui.sheet = null; render(); toast(!rec ? '기록했어요' : completing ? '퇴근 시각을 넣었어요' : '수정했어요');
   }); },
 
   saveEmp(d){ guarded(async () => {
